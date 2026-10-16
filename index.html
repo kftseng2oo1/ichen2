@@ -337,7 +337,6 @@
         let hasPerformedDivination = false;
         let deferredPrompt;
 
-```
     const TRIGRAMS = {
         1: { name: '乾', lines: [1,1,1] }, 2: { name: '兌', lines: [0,1,1] },
         3: { name: '離', lines: [1,0,1] }, 4: { name: '震', lines: [0,0,1] },
@@ -516,7 +515,8 @@
         const hexagram = HEXAGRAM_MAP[hexagramKey];
         const upperTrigram = TRIGRAMS[upperValue];
         const lowerTrigram = TRIGRAMS[lowerValue];
-        const hexagramLines = [...lowerTrigram.lines, ...upperTrigram.lines];
+        // TRIGRAMS 的 lines 是由上往下記錄；卦爻一律轉成由下往上（index 0 = 初爻）
+        const hexagramLines = [...lowerTrigram.lines].reverse().concat([...upperTrigram.lines].reverse());
         const transformedLines = [...hexagramLines];
         transformedLines[movingLine - 1] = transformedLines[movingLine - 1] === 1 ? 0 : 1;
         const transformedHexagram = getHexagramFromLines(transformedLines);
@@ -532,8 +532,8 @@
     }
 
     function getHexagramFromLines(lines) {
-        const upperLines = lines.slice(3, 6);
-        const lowerLines = lines.slice(0, 3);
+        const upperLines = lines.slice(3, 6).reverse();
+        const lowerLines = lines.slice(0, 3).reverse();
         let upperValue = 0, lowerValue = 0;
         for (let key in TRIGRAMS) {
             if (JSON.stringify(TRIGRAMS[key].lines) === JSON.stringify(upperLines)) upperValue = parseInt(key);
@@ -542,9 +542,55 @@
         return HEXAGRAM_MAP[`${upperValue}-${lowerValue}`] || HEXAGRAM_MAP['1-1'];
     }
 
+    const YAO_NAMES = ['初', '二', '三', '四', '五', '上'];
+
+    function renderLines(lines, movingLine) {
+        // .hexagram-lines 使用 column-reverse，第一個元素顯示在最下方（初爻）
+        return lines.map((v, i) => {
+            const cls = ['line'];
+            if (v === 0) cls.push('broken');
+            if (movingLine && i === movingLine - 1) cls.push('moving');
+            return `<div class="${cls.join(' ')}"></div>`;
+        }).join('');
+    }
+
     function displayResult(hexagram, transformedHexagram, originalLines, transformedLines, movingLine, categoryData) {
         const resultSection = document.getElementById('resultSection');
+        const catName = document.querySelector(`.category-btn[data-category="${selectedCategory}"] .category-name`);
+        const yaoKind = originalLines[movingLine - 1] === 1 ? '九' : '六';
+        const yaoLabel = movingLine === 1 ? `初${yaoKind}` : movingLine === 6 ? `上${yaoKind}` : `${yaoKind}${YAO_NAMES[movingLine - 1]}`;
         const html = `
             <div class="result-section">
-                <h3 style="text-align: center; color: #d4af37
-```
+                <h3 style="text-align: center; color: #d4af37; margin-bottom: 4px;">占卜結果</h3>
+                <div style="text-align: center; color: #999; font-size: 13px;">
+                    ${catName ? catName.textContent : ''} · 動爻：${yaoLabel}（第 ${movingLine} 爻）
+                </div>
+                <div class="hexagram-display">
+                    <div class="hexagram-item">
+                        <div class="hexagram-label">本卦 · 第 ${hexagram.id} 卦</div>
+                        <div class="hexagram-name">${hexagram.name}</div>
+                        <div class="hexagram-lines">${renderLines(originalLines, movingLine)}</div>
+                    </div>
+                    <div class="hexagram-item">
+                        <div class="hexagram-label">變卦 · 第 ${transformedHexagram.id} 卦</div>
+                        <div class="hexagram-name">${transformedHexagram.name}</div>
+                        <div class="hexagram-lines">${renderLines(transformedLines, 0)}</div>
+                    </div>
+                </div>
+                <div style="text-align: center;">
+                    <span class="judgment-badge judgment-${categoryData.judgment}">${categoryData.judgment}</span>
+                </div>
+                <div class="interpretation-text">${categoryData.text}</div>
+                <div class="advice-section">
+                    <div class="advice-title">💡 建議</div>
+                    <div class="advice-text">${categoryData.advice}</div>
+                </div>
+            </div>
+        `;
+        resultSection.innerHTML = html;
+        resultSection.style.display = 'block';
+        setTimeout(() => resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+    </script>
+</body>
+</html>
