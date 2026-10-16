@@ -13,7 +13,6 @@
 ## 備註
 - 2026-10 修復：原 `index.html` 被截斷且混入一行 Markdown 標記，App 無法使用；同時修正了爻序錯誤（見 PR #2）。
 - 解讀資料只有每個類別一組通用文字，內容更完整的版本是 [v3](https://github.com/kftseng2oo1/v3) 和 [gold](https://github.com/kftseng2oo1/gold)。
-- 圖示有兩組重複檔名（`icon-192.png`／`icon192.png`、`icon-512.png`／`icon512.png`），可刪除其中一組。
 
 ## 技術與依賴
 - 單檔 HTML PWA（`index.html`），`manifest.json` + `sw.js` 提供安裝與離線快取；純前端、無外部連線
